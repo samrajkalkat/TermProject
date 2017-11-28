@@ -4,8 +4,8 @@ class Player(object):
 
 	def __init__(self):
 	
-		self.x = 0
-		self.y = 0
+		self.x = 325
+		self.y = 325
 
 		self.width = 30
 		self.height = 30
@@ -22,6 +22,8 @@ class Player(object):
 		self.direction = 'down'
 
 		self.health = 100
+
+		self.bulletSpeed = 10
 
 		self.sprite = 'sprites/playerDown.png'
 
@@ -73,40 +75,50 @@ class Player(object):
 	def moveBullets(self):
 		for bullet in self.bulletSet:
 			if bullet[2] == 'right':
-				bullet[0] += 5
+				bullet[0] += self.bulletSpeed
 			if bullet[2] == 'left':
-				bullet[0] -= 5
+				bullet[0] -= self.bulletSpeed
 			if bullet[2] == 'up':
-				bullet[1] -= 5
+				bullet[1] -= self.bulletSpeed
 			if bullet[2] == 'down':
-				bullet[1] += 5
-
+				bullet[1] += self.bulletSpeed
 			if bullet[2] == 'downRight':
-				bullet[0] += 5
-				bullet[1] += 5
+				bullet[0] += self.bulletSpeed
+				bullet[1] += self.bulletSpeed
 			if bullet[2] == 'downLeft':
-				bullet[0] -= 5
-				bullet[1] += 5
+				bullet[0] -= self.bulletSpeed
+				bullet[1] += self.bulletSpeed
 			if bullet[2] == 'upRight':
-				bullet[0] += 5
-				bullet[1] -= 5
+				bullet[0] += self.bulletSpeed
+				bullet[1] -= self.bulletSpeed
 			if bullet[2] == 'upLeft':
-				bullet[0] -= 5
-				bullet[1] -= 5
+				bullet[0] -= self.bulletSpeed
+				bullet[1] -= self.bulletSpeed
+
+			if bullet[0] > 650 or bullet[0] < 0:
+				self.bulletSet.remove(bullet)
+			elif bullet[1] > 650 or bullet[1] < 0:
+				self.bulletSet.remove(bullet)
 
 	def drawBullets(self,screen):
 		for bullet in self.bulletSet:
 			
 			center = (int(bullet[0]),int(bullet[1]))
-	
-			pygame.draw.rect(screen,(255,0,0),(int(bullet[0]),int(bullet[1]),10,10))
+			pygame.draw.circle(screen,(255,0,0),center,5)
+
+
+	def displayHealth(self,screen):
+		healthbarPos = (30,30)
+		if self.health >= 0:
+			pygame.draw.rect(screen,(220,0,0),(healthbarPos,(20,150*self.health/100)))
+		pygame.draw.rect(screen,(0,0,0),(30,30,20,150),3)
 
 
 	def draw(self,screen):
 		self.drawBullets(screen)
 		self.moveBullets()
 
-		self.rect = pygame.Rect((self.x,self.y),(30,30))
+		self.rect = pygame.Rect((self.x,self.y),(25,25))
 		self.centerX = self.rect.centerx
 		self.centerY = self.rect.centery
 

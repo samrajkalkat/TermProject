@@ -43,7 +43,7 @@ RED =   (255,   0,   0)
 
 #framework from provided gitbook
 class PygameGame(object):
-	
+
 
 	def drawStartScreen(self,screen):
 		self.drawText(screen,'Welcome!',(self.width/2,self.height/4),80,WHITE)
@@ -59,7 +59,9 @@ class PygameGame(object):
 		self.drawText(screen,"(press '2')",(3*self.width/4,3*self.height/4+50),40,WHITE)
 
 	def initSinglePlayerGame(self,screen):
-		screen.fill((225,225,225))
+		image = pygame.image.load("terrain.png")
+		screen.blit(image,(0,0))
+		# screen.fill((225,225,225))
 
 	def drawText(self,screen,text,center,size,color):
 		#helper function to draw text on the screen
@@ -68,8 +70,6 @@ class PygameGame(object):
 		text = font.render(text,True,color)
 		textBox = text.get_rect(center=center)
 		screen.blit(text,textBox)
-
-
 
 
 	def readServerMsg(self):
@@ -133,12 +133,21 @@ class PygameGame(object):
 					break
 
 
+	def didEnemyHitPlayer(self):
+		for enemy in self.enemyList:
+			enemyRect = pygame.Rect(enemy.x,enemy.y,enemy.width,enemy.height)
+			if self.player.rect.colliderect(enemyRect):
+				self.player.health -= 1
+
+
 
 	def timerFired(self,dt):
 		if self.singlePlayer:
 			self.createEnemies()
 		self.moveEnemies()
 		self.didBulletHitEnemy(self.enemy, self.player)
+		self.didEnemyHitPlayer()
+
 
 
 	def moveEnemies(self):
@@ -152,8 +161,8 @@ class PygameGame(object):
 		self.counter += 1
 		if self.counter % 30 == 0:
 			self.enemyList.append(Enemy())
-			print(len(self.enemyList))
-
+			if self.counter % 45 == 0:
+				self.enemyList.append(Boss())
 
 	def redrawAll(self, screen):
 		if self.startScreen:
@@ -165,7 +174,7 @@ class PygameGame(object):
 			self.player.draw(screen)
 			for enemy in self.enemyList:
 				enemy.draw(screen)
-
+			self.player.displayHealth(screen)
 	def isKeyPressed(self, key):
 		''' return whether a specific key is being held '''
 		return self._keys.get(key, False)
