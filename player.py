@@ -7,8 +7,17 @@ class Player(object):
 		self.x = 0
 		self.y = 0
 
+		self.width = 30
+		self.height = 30
+
+		self.bulletW = 10
+		self.bulletH = 10
+
 		self.xSpeed = 0
 		self.ySpeed = 0
+
+		self.centerX = 0
+		self.centeY = 0
 
 		self.direction = 'down'
 
@@ -16,7 +25,8 @@ class Player(object):
 
 		self.sprite = 'sprites/playerDown.png'
 
-		self.bullets = dict()
+		self.bulletSet = []
+		self.rect = pygame.Rect
 
 		#self.weapon = weapon
 		# self.sprite = sprite #implement sprite selection for different characters
@@ -27,6 +37,23 @@ class Player(object):
 		self.y += dy
 
 		#setting player direction based on direction of movement
+		if dx > 0 and dy > 0:
+			self.direction = 'downRight'
+			self.sprite = 'sprites/playerDownRight.png'
+			return
+		if dx > 0 and dy < 0:
+			self.direction = 'upRight'
+			self.sprite = 'sprites/playerUpRight.png'
+			return
+		if dx < 0 and dy > 0:
+			self.direction = 'downLeft'
+			self.sprite = 'sprites/playerDownLeft.png'
+			return
+		if dx < 0 and dy < 0:
+			self.direction = 'upLeft'
+			self.sprite = 'sprites/playerUpLeft.png'
+			return
+
 		if dx < 0:
 			self.direction = 'left'
 			self.sprite = 'sprites/playerLeft.png'
@@ -40,16 +67,55 @@ class Player(object):
 			self.direction = 'down'
 			self.sprite = 'sprites/playerDown.png'
 
-		
+	def fire(self):
+		self.bulletSet.append([self.centerX,self.centerY,self.direction])
 
-	def fire(self,screen):
-		pass
+	def moveBullets(self):
+		for bullet in self.bulletSet:
+			if bullet[2] == 'right':
+				bullet[0] += 5
+			if bullet[2] == 'left':
+				bullet[0] -= 5
+			if bullet[2] == 'up':
+				bullet[1] -= 5
+			if bullet[2] == 'down':
+				bullet[1] += 5
+
+			if bullet[2] == 'downRight':
+				bullet[0] += 5
+				bullet[1] += 5
+			if bullet[2] == 'downLeft':
+				bullet[0] -= 5
+				bullet[1] += 5
+			if bullet[2] == 'upRight':
+				bullet[0] += 5
+				bullet[1] -= 5
+			if bullet[2] == 'upLeft':
+				bullet[0] -= 5
+				bullet[1] -= 5
+
+	def drawBullets(self,screen):
+		for bullet in self.bulletSet:
+			
+			center = (int(bullet[0]),int(bullet[1]))
+	
+			pygame.draw.rect(screen,(255,0,0),(int(bullet[0]),int(bullet[1]),10,10))
+
 
 	def draw(self,screen):
-		spriteRect = pygame.Rect((self.x,self.y),(500,500))
-		sprite = pygame.image.load(self.sprite)
+		self.drawBullets(screen)
+		self.moveBullets()
 
-		screen.blit(sprite,spriteRect)
+		self.rect = pygame.Rect((self.x,self.y),(30,30))
+		self.centerX = self.rect.centerx
+		self.centerY = self.rect.centery
+
+		sprite = pygame.image.load(self.sprite)
+		# pygame.draw.rect(screen,(0,0,0),
+		# 	(self.x,self.y,30,30))
+		screen.blit(sprite,self.rect)
+		
+		
 
 
 

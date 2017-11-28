@@ -46,22 +46,20 @@ class PygameGame(object):
 	
 
 	def drawStartScreen(self,screen):
-		self.drawText(screen,'Welcome!',(self.width/2,self.height/4),80,BLACK)
-		self.drawText(screen,"Press 'p' to start",(self.width/2,3*self.height/4),40,BLACK)
+		self.drawText(screen,'Welcome!',(self.width/2,self.height/4),80,WHITE)
+		self.drawText(screen,"Press 'p' to start",(self.width/2,3*self.height/4),40,WHITE)
 
 	def drawMenuScreen(self,screen):
-		self.drawText(screen,'Select game mode',(self.width/2,self.height/4),50,BLACK)
+		self.drawText(screen,'Select game mode',(self.width/2,self.height/4),50,WHITE)
 
-		self.drawText(screen,'Single Player',(self.width/4,3*self.height/4),40,BLACK)
-		self.drawText(screen,"(press '1')",(self.width/4,3*self.height/4+50),40,BLACK)
+		self.drawText(screen,'Single Player',(self.width/4,3*self.height/4),40,WHITE)
+		self.drawText(screen,"(press '1')",(self.width/4,3*self.height/4+50),40,WHITE)
 
-		self.drawText(screen,'Multi Player',(3*self.width/4,3*self.height/4),40,BLACK)
-		self.drawText(screen,"(press '2')",(3*self.width/4,3*self.height/4+50),40,BLACK)
+		self.drawText(screen,'Multi Player',(3*self.width/4,3*self.height/4),40,WHITE)
+		self.drawText(screen,"(press '2')",(3*self.width/4,3*self.height/4+50),40,WHITE)
 
 	def initSinglePlayerGame(self,screen):
-		screen.fill((0,0,0))
-
-
+		screen.fill((225,225,225))
 
 	def drawText(self,screen,text,center,size,color):
 		#helper function to draw text on the screen
@@ -70,6 +68,9 @@ class PygameGame(object):
 		text = font.render(text,True,color)
 		textBox = text.get_rect(center=center)
 		screen.blit(text,textBox)
+
+
+
 
 	def readServerMsg(self):
 		#reading and extracting messages from the server
@@ -85,8 +86,10 @@ class PygameGame(object):
 		#do stuff to interpret the messages
 
 	def init(self):
+		self.enemyList = []
 		self.player = Player()
 		self.enemy = Enemy()
+		self.counter = 0
 
 	def mousePressed(self, x, y):
 		pass
@@ -101,6 +104,7 @@ class PygameGame(object):
 		pass
 
 	def keyPressed(self, keyCode, modifier):
+
 		if self.startScreen:
 			if keyCode == pygame.K_p:
 				self.startScreen = False
@@ -112,21 +116,45 @@ class PygameGame(object):
 				self.twoPlayer = True
 
 		if self.singlePlayer:
-			if keyCode == pygame.K_LEFT:
-				self.player.move(-10,0)
-			if keyCode == pygame.K_RIGHT:
-				self.player.move(10,0)
-			if keyCode == pygame.K_UP:
-				self.player.move(0,-10)
-			if keyCode == pygame.K_DOWN:
-				self.player.move(0,10)
-
+			if keyCode == pygame.K_SPACE:
+				self.player.fire()
 	def keyReleased(self, keyCode, modifier):
 		pass
 
+
+	def didBulletHitEnemy(self,enemy,player):
+		for bullet in player.bulletSet:
+			for enemy in self.enemyList:
+				bulletRect = pygame.Rect(bullet[0],bullet[1],player.bulletW,player.bulletH)
+				enemyRect = pygame.Rect(enemy.x,enemy.y,enemy.width,enemy.height)
+				if bulletRect.colliderect(enemyRect):
+					player.bulletSet.remove(bullet)
+					self.enemyList.remove(enemy)
+					break
+
+
+
 	def timerFired(self,dt):
-		self.enemy.move(self.player)
+		if self.singlePlayer:
+			self.createEnemies()
+		self.moveEnemies()
+		self.didBulletHitEnemy(self.enemy, self.player)
+
+
+	def moveEnemies(self):
+		if self.singlePlayer:
+			for enemy in self.enemyList:
+				enemy.move(self.player)
+
+		
    
+	def createEnemies(self):
+		self.counter += 1
+		if self.counter % 30 == 0:
+			self.enemyList.append(Enemy())
+			print(len(self.enemyList))
+
+
 	def redrawAll(self, screen):
 		if self.startScreen:
 			self.drawStartScreen(screen)
@@ -135,9 +163,8 @@ class PygameGame(object):
 		if self.singlePlayer:
 			self.initSinglePlayerGame(screen)
 			self.player.draw(screen)
-			self.enemy.draw(screen)
-
-
+			for enemy in self.enemyList:
+				enemy.draw(screen)
 
 	def isKeyPressed(self, key):
 		''' return whether a specific key is being held '''
@@ -148,7 +175,7 @@ class PygameGame(object):
 		self.height = height
 		self.fps = fps
 		self.title = title
-		self.bgColor = (255, 255, 255)
+		self.bgColor = BLACK
 
 		#screens
 		self.startScreen = True
@@ -175,6 +202,22 @@ class PygameGame(object):
 		while playing:
 			time = clock.tick(self.fps)
 			self.timerFired(time)
+
+			if self.singlePlayer:
+				keys = pygame.key.get_pressed()
+				dx = 0
+				dy = 0
+				if keys[pygame.K_UP]:
+					dy = -2.5
+				if keys[pygame.K_DOWN]:
+					dy = 2.5
+				if keys[pygame.K_LEFT]:
+					dx = -2.5
+				if keys[pygame.K_RIGHT]:
+					dx = 2.5
+
+				self.player.move(dx,dy)
+
 			for event in pygame.event.get():
 				if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
 					self.mousePressed(*(event.pos))
