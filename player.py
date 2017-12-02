@@ -30,6 +30,14 @@ class Player(object):
 		self.bulletSet = []
 		self.rect = pygame.Rect
 
+
+		self.dead = False
+
+		self.bulletLeft = 'sprites/bulletLeft.png'
+		self.bulletRight = 'sprites/bulletRight.png'
+		self.bulletUp = 'sprites/bulletUp.png'
+		self.bulletDown = 'sprites/bulletDown.png'
+
 		#self.weapon = weapon
 		# self.sprite = sprite #implement sprite selection for different characters
 
@@ -102,7 +110,6 @@ class Player(object):
 
 	def drawBullets(self,screen):
 		for bullet in self.bulletSet:
-			
 			center = (int(bullet[0]),int(bullet[1]))
 			pygame.draw.circle(screen,(255,0,0),center,5)
 
@@ -118,7 +125,7 @@ class Player(object):
 		self.drawBullets(screen)
 		self.moveBullets()
 
-		self.rect = pygame.Rect((self.x,self.y),(25,25))
+		self.rect = pygame.Rect((self.x,self.y),(50,50))
 		self.centerX = self.rect.centerx
 		self.centerY = self.rect.centery
 
