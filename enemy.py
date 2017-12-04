@@ -17,7 +17,11 @@ class Enemy(object):
 		self.health = 100
 		# self.direction = down
 		self.speed = 0.6
-		self.health = 1
+		self.health = 3
+
+		self.rect = pygame.Rect
+		self.sprite = 'sprites/zdown.gif'
+
 
 		print('New enemy created')
 	
@@ -34,13 +38,13 @@ class Enemy(object):
 				self.xSpeed = self.speed
 			if self.x > player1.x:
 				self.xSpeed = -self.speed
-			if self.x == player1.x:
-				self.xSpeed = 0
 			if self.y < player1.y:
 				self.ySpeed = self.speed
 			if self.y > player1.y:
 				self.ySpeed = -self.speed
-			if self.y == player1.y:
+			if abs(self.x - player1.x) <= 5:
+				self.xSpeed = 0
+			if abs(self.y - player1.y) <= 5:
 				self.ySpeed = 0
 
 		else:
@@ -50,27 +54,46 @@ class Enemy(object):
 					self.xSpeed = self.speed
 				if self.x > player2.x:
 					self.xSpeed = -self.speed
-				if self.x == player2.x:
-					self.xSpeed = 0
 				if self.y < player2.y:
 					self.ySpeed = self.speed
 				if self.y > player2.y:
 					self.ySpeed = -self.speed
-				if self.y == player2.y:
+				if abs(self.x - player2.x) <= 5:
+					self.xSpeed = 0
+				if abs(self.y - player2.y) <= 5:
 					self.ySpeed = 0
 			elif distance(self.x,self.y,player1.x,player1.y) < distance(self.x,self.y,player2.x,player2.y):
 				if self.x < player1.x:
 					self.xSpeed = self.speed
 				if self.x > player1.x:
 					self.xSpeed = -self.speed
-				if self.x == player1.x:
-					self.xSpeed = 0
 				if self.y < player1.y:
 					self.ySpeed = self.speed
 				if self.y > player1.y:
 					self.ySpeed = -self.speed
-				if self.y == player1.y:
+				if abs(self.x - player1.x) <= 5:
+					self.xSpeed = 0
+				if abs(self.y - player1.y) <= 5:
 					self.ySpeed = 0
+
+
+		if self.xSpeed > 0 and self.ySpeed > 0:
+			self.sprite = 'sprites/zrightdown.gif'
+		if self.xSpeed > 0 and self.ySpeed < 0:
+			self.sprite = 'sprites/zrightup.gif'	
+		if self.xSpeed < 0 and self.ySpeed > 0:
+			self.sprite = 'sprites/zleftdown.gif'	
+		if self.xSpeed < 0 and self.ySpeed < 0:
+			self.sprite = 'sprites/zleftup.gif'
+
+		if self.xSpeed < 0 and self.ySpeed == 0:
+			self.sprite = 'sprites/zleft.gif'
+		if self.xSpeed > 0 and self.ySpeed == 0:
+			self.sprite = 'sprites/zright.gif'
+		if self.ySpeed < 0 and self.xSpeed == 0:
+			self.sprite = 'sprites/zup.gif'
+		if self.ySpeed > 0 and self.xSpeed == 0:
+			self.sprite = 'sprites/zdown.gif'	
 
 		self.x += self.xSpeed
 		self.y += self.ySpeed
@@ -81,8 +104,14 @@ class Enemy(object):
 	
 	def draw(self,screen):
 		if not self.dead:
-			pygame.draw.rect(screen,self.color,
-				(self.x,self.y,self.width,self.height))
+
+			self.rect = pygame.Rect((self.x,self.y),(0,0))
+			sprite = pygame.image.load(self.sprite)
+			screen.blit(sprite,self.rect)
+
+
+			# pygame.draw.rect(screen,self.color,
+			# 	(self.x,self.y,self.width,self.height))
 
 
 

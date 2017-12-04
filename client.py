@@ -50,6 +50,9 @@ RED =   (255,   0,   0)
 class PygameGame(object):
 
 	def drawStartScreen(self,screen):
+		image = pygame.image.load("titleScreen.jpg")
+		image = pygame.transform.scale(image, (550, 550))
+		screen.blit(image,(0,0))
 		self.drawText(screen,'Welcome!',(self.width/2,self.height/4),80,WHITE)
 		self.drawText(screen,"Press 'p' to start",(self.width/2,3*self.height/4),40,WHITE)
 
@@ -63,11 +66,19 @@ class PygameGame(object):
 		self.drawText(screen,"(press '2')",(3*self.width/4,3*self.height/4+50),40,WHITE)
 
 	def drawGameOverScreen(self,screen):
-		self.drawText(screen,'You Died!',(3*self.width/4,3*self.height/4),40,WHITE)
-		self.drawText(screen,"(press 'r' to respawn)",(3*self.width/4,3*self.height/4+50),40,WHITE)
+		screen.fill((0,0,0))
+		self.drawText(screen,'Game Over!',(self.width/2,self.height/4),40,WHITE)
+		self.drawText(screen,"Score: %s" % (self.player.score),(self.width/2,self.height/4 + 50),30,WHITE)
+		self.drawText(screen,"(press 'r' to respawn)",(self.width/2,self.height/2),40,WHITE)
+		self.drawText(screen,"(press 'm' to return to menu)",(self.width/2,self.height/2 + 50),40,WHITE)
+
+	def drawPauseScreen(self,screen):
+		pass
 
 	def initSinglePlayerGame(self,screen):
 		image = pygame.image.load("terrain.png")
+		image = pygame.transform.scale(image, (550, 550))
+		screen.fill((225,225,225))
 		screen.blit(image,(0,0))
 
 	def initMultiPlayerGame(self,screen):
@@ -101,12 +112,13 @@ class PygameGame(object):
 		self.server = server
 		self.enemyList = []
 		self.theEnemies = []
-		self.player = Player()
-		self.player2 = Player()
-		x = random.randint(0,650)
-		y = random.randint(0,650)
+		self.player = Player('blue')
+		self.player2 = Player('red')
+		x = random.randint(0,550)
+		y = random.randint(0,550)
 		self.enemy = Enemy(x,y)
 		self.counter = 0
+
 
 		self.myID = ''
 
@@ -136,15 +148,20 @@ class PygameGame(object):
 				msg = 'otherPlayerReady %s\n' % (self.myID)
 				self.server.send(msg.encode())
 				if self.myID == 'p2':
+					self.player = Player('red')
+					self.player2 = Player('blue')
 					self.bothPlayersReady = True
+
 
 		if self.singlePlayer:
 			if keyCode == pygame.K_SPACE:
 				self.player.fire()
-			if self.player.health <= 0:
-				print('respawn player here\nto be implemented')
-				# if keyCode == pygmae.K_r:
-				# 	self.player.health = 100
+			if self.gameOver:
+				if keyCode == pygame.K_r:
+					del self.enemyList[:]
+					self.player.respawn()
+					self.gameOver = False
+
 		if self.multiPlayer:
 			if keyCode == pygame.K_SPACE:
 				self.player.fire()
@@ -166,6 +183,7 @@ class PygameGame(object):
 						enemy.health -= 1
 						if enemy.health == 0:
 							self.enemyList.remove(enemy)
+							player.score += 1
 							break
 		else:
 			for bullet in player.bulletSet:
@@ -177,6 +195,7 @@ class PygameGame(object):
 						enemy.health -= 1
 						if enemy.health == 0:
 							self.enemyList.remove(enemy)
+							player.score += 1
 							break
 
 			for bullet in player2.bulletSet:
@@ -188,6 +207,7 @@ class PygameGame(object):
 						enemy.health -= 1
 						if enemy.health == 0:
 							self.enemyList.remove(enemy)
+							player2.score += 1
 							break
 
 
@@ -207,7 +227,6 @@ class PygameGame(object):
 			if type(msg) == dict:
 				print("GOT IT")
 			else:
-				print(msg)
 				msg = msg.split()
 				cmd = msg[0]
 
@@ -224,8 +243,6 @@ class PygameGame(object):
 					self.myID = msg[1]
 
 				if cmd == 'otherPlayerReady':
-					print('ready')
-					print('kasjdkfljasdkfajldfkjasdlfkajsldfkajdklfajlfk')
 					if self.multiPlayer:
 						self.bothPlayersReady = True
 
@@ -239,16 +256,14 @@ class PygameGame(object):
 					if cmd == 'fired':
 						self.player2.fire()
 						
-
-
 		if self.singlePlayer:
 			self.moveEnemies()
 			self.didBulletHitEnemy(self.enemy, self.player,None)
 			self.didEnemyHitPlayer()
-			if self.player.health > 0:
+			if not self.gameOver:
 				self.createEnemies()
-			else:
-				del self.enemyList[:]
+			if self.player.health <= 0:
+				self.gameOver = True
 
 		if self.multiPlayer:
 			if self.myID == 'p1':
@@ -261,8 +276,6 @@ class PygameGame(object):
 
 		
 
-
-
 	def moveEnemies(self):
 		if self.singlePlayer:
 			for enemy in self.enemyList:
@@ -270,15 +283,13 @@ class PygameGame(object):
 		elif self.multiPlayer:
 			for enemy in self.enemyList:
 				enemy.move(self.player,self.player2)
-
-
 		
    
 	def createEnemies(self):
 		self.counter += 1
 		if self.counter % 30 == 0:
-			x = random.randint(0,650)
-			y = random.randint(0,650)
+			x = random.randint(135,412)
+			y = random.choice([-5,555])
 			enemy = Enemy(x,y)
 			self.enemyList.append(enemy)
 			message = 'newEnemy %s %s\n' % (x,y)
@@ -294,15 +305,17 @@ class PygameGame(object):
 		if self.singlePlayer:
 			self.menuScreen = False
 			self.startScreen = False
-			if self.player.health > 0:
-				self.initSinglePlayerGame(screen)
-				self.player.draw(screen)
-				for enemy in self.enemyList:
-					enemy.draw(screen)
-			if self.player.health <=0:
-				self.drawGameOverScreen(screen)
+			self.initSinglePlayerGame(screen)
+			self.player.draw(screen)
+			for enemy in self.enemyList:
+				enemy.draw(screen)
 			self.player.displayHealth(screen)  
+
+		if self.gameOver:
+			self.drawGameOverScreen(screen)
+
 		if self.multiPlayer:
+
 			self.initMultiPlayerGame(screen)
 			self.player.draw(screen)
 			self.player2.draw(screen)
@@ -310,11 +323,14 @@ class PygameGame(object):
 				enemy.draw(screen)
 			self.player.displayHealth(screen)  
 
+			if not self.bothPlayersReady:
+				self.drawText(screen,'Waiting for Player 2...',(self.width/2,self.height/4),35,RED)
+
 	def isKeyPressed(self, key):
 		''' return whether a specific key is being held '''
 		return self._keys.get(key, False)
 
-	def __init__(self, width=650, height=650, fps=50, title="Term Project"):
+	def __init__(self, width=550, height=550, fps=50, title="Term Project"):
 		self.width = width
 		self.height = height
 		self.fps = fps
@@ -326,7 +342,7 @@ class PygameGame(object):
 		self.menuScreen = False
 		self.singlePlayer = False
 		self.multiPlayer = False
-
+		self.gameOver = False
 		self.bothPlayersReady = False
 
 		pygame.init()

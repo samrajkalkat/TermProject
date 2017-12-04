@@ -2,10 +2,10 @@ import pygame,random
 
 class Player(object):
 
-	def __init__(self):
+	def __init__(self,color):
 	
-		self.x = 325
-		self.y = 325
+		self.x = 275
+		self.y = 275
 
 		self.width = 30
 		self.height = 30
@@ -25,18 +25,25 @@ class Player(object):
 
 		self.bulletSpeed = 10
 
-		self.sprite = 'sprites/playerDown.png'
+		self.sprite = 'sprites/pDown.png'
 
 		self.bulletSet = []
 		self.rect = pygame.Rect
 
+		self.color = color
 
 		self.dead = False
+
+
+		self.score = 0
 
 		self.bulletLeft = 'sprites/bulletLeft.png'
 		self.bulletRight = 'sprites/bulletRight.png'
 		self.bulletUp = 'sprites/bulletUp.png'
 		self.bulletDown = 'sprites/bulletDown.png'
+
+
+
 
 		#self.weapon = weapon
 		# self.sprite = sprite #implement sprite selection for different characters
@@ -47,38 +54,77 @@ class Player(object):
 		self.y += dy
 
 		#setting player direction based on direction of movement
-		if dx > 0 and dy > 0:
-			self.direction = 'downRight'
-			self.sprite = 'sprites/playerDownRight.png'
-			return
-		if dx > 0 and dy < 0:
-			self.direction = 'upRight'
-			self.sprite = 'sprites/playerUpRight.png'
-			return
-		if dx < 0 and dy > 0:
-			self.direction = 'downLeft'
-			self.sprite = 'sprites/playerDownLeft.png'
-			return
-		if dx < 0 and dy < 0:
-			self.direction = 'upLeft'
-			self.sprite = 'sprites/playerUpLeft.png'
-			return
+		if self.color == 'blue':
+			if dx > 0 and dy > 0:
+				self.direction = 'downRight'
+				self.sprite = 'sprites/pDownRight.png'
+				return
+			if dx > 0 and dy < 0:
+				self.direction = 'upRight'
+				self.sprite = 'sprites/pUpRight.png'
+				return
+			if dx < 0 and dy > 0:
+				self.direction = 'downLeft'
+				self.sprite = 'sprites/pDownLeft.png'
+				return
+			if dx < 0 and dy < 0:
+				self.direction = 'upLeft'
+				self.sprite = 'sprites/pUpLeft.png'
+				return
+			if dx < 0:
+				self.direction = 'left'
+				self.sprite = 'sprites/pLeft.png'
+			if dx > 0:
+				self.direction = 'right'
+				self.sprite = 'sprites/pRight.png'
+			if dy < 0:
+				self.direction = 'up'
+				self.sprite = 'sprites/pUp.png'
+			if dy > 0:
+				self.direction = 'down'
+				self.sprite = 'sprites/pDown.png'
 
-		if dx < 0:
-			self.direction = 'left'
-			self.sprite = 'sprites/playerLeft.png'
-		if dx > 0:
-			self.direction = 'right'
-			self.sprite = 'sprites/playerRight.png'
-		if dy < 0:
-			self.direction = 'up'
-			self.sprite = 'sprites/playerUp.png'
-		if dy > 0:
-			self.direction = 'down'
-			self.sprite = 'sprites/playerDown.png'
+		if self.color == 'red':
+			if dx > 0 and dy > 0:
+				self.direction = 'downRight'
+				self.sprite = 'sprites/p2DownRight.png'
+				return
+			if dx > 0 and dy < 0:
+				self.direction = 'upRight'
+				self.sprite = 'sprites/p2UpRight.png'
+				return
+			if dx < 0 and dy > 0:
+				self.direction = 'downLeft'
+				self.sprite = 'sprites/p2DownLeft.png'
+				return
+			if dx < 0 and dy < 0:
+				self.direction = 'upLeft'
+				self.sprite = 'sprites/p2UpLeft.png'
+				return
+
+			if dx < 0:
+				self.direction = 'left'
+				self.sprite = 'sprites/p2Left.png'
+			if dx > 0:
+				self.direction = 'right'
+				self.sprite = 'sprites/p2Right.png'
+			if dy < 0:
+				self.direction = 'up'
+				self.sprite = 'sprites/p2Up.png'
+			if dy > 0:
+				self.direction = 'down'
+				self.sprite = 'sprites/p2Down.png'
 
 	def fire(self):
 		self.bulletSet.append([self.centerX,self.centerY,self.direction])
+
+
+	def respawn(self):
+		self.health = 100
+		self.x = 275
+		self.y = 275
+		self.direction = 'down'
+		self.score = 0
 
 	def moveBullets(self):
 		for bullet in self.bulletSet:
@@ -125,11 +171,16 @@ class Player(object):
 		self.drawBullets(screen)
 		self.moveBullets()
 
-		self.rect = pygame.Rect((self.x,self.y),(50,50))
+		sprite = pygame.image.load(self.sprite)
+		spriteWidth = sprite.get_rect().size[0]
+		spriteHeight = sprite.get_rect().size[1]
+		sprite = pygame.transform.scale(sprite, (spriteWidth//2, spriteHeight//2))
+
+		self.rect = pygame.Rect((self.x,self.y),(spriteWidth//2,spriteHeight//2))
 		self.centerX = self.rect.centerx
 		self.centerY = self.rect.centery
 
-		sprite = pygame.image.load(self.sprite)
+		
 		# pygame.draw.rect(screen,(0,0,0),
 		# 	(self.x,self.y,30,30))
 		screen.blit(sprite,self.rect)

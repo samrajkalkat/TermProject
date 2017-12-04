@@ -21,7 +21,7 @@ BACKLOG = 4
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 server.bind((HOST,PORT))
 server.listen(BACKLOG)
-print("looking for connection")
+print("Waiting for connection...")
 
 def handleClient(client, serverChannel, cID, clientele):
   client.setblocking(1)
@@ -57,22 +57,6 @@ def serverThread(clientele, serverChannel):
     print()
     serverChannel.task_done()
 
-
-
-# while True:
-#   client, address = server.accept()
-#   # myID is the key to the client in the clientele dictionary
-#   myID = names[playerNum]
-#   print(myID, playerNum)
-#   for cID in clientele:
-#     print (repr(cID), repr(playerNum))
-#     clientele[cID].send(("newPlayer %s\n" % myID).encode())
-#     client.send(("newPlayer %s\n" % cID).encode())
-#   clientele[myID] = client
-#   client.send(("myIDis %s \n" % myID).encode())
-#   print("connection recieved from %s" % myID)
-#   threading.Thread(target = handleClient, args = 
-#                         (client ,serverChannel, myID, clientele)).start()
 
 class PygameGame(object):
 
@@ -150,7 +134,7 @@ class PygameGame(object):
         ''' return whether a specific key is being held '''
         return self._keys.get(key, False)
 
-    def __init__(self, width=600, height=400, fps=50, title="112 Pygame Game"):
+    def __init__(self, width=0, height=0, fps=50, title="112 Pygame Game"):
         self.width = width
         self.height = height
         self.fps = fps
@@ -167,7 +151,7 @@ class PygameGame(object):
     def run(self):
 
         clock = pygame.time.Clock()
-        screen = pygame.display.set_mode((self.width, self.height))
+        # screen = pygame.display.set_mode((self.width, self.height))
         # set the title of the window
         pygame.display.set_caption(self.title)
 
