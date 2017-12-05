@@ -22,6 +22,9 @@ class Enemy(object):
 		self.rect = pygame.Rect
 		self.sprite = 'sprites/zdown.gif'
 
+		self.spriteHeight = 0
+		self.spriteWidth = 0
+
 
 		print('New enemy created')
 	
@@ -32,7 +35,7 @@ class Enemy(object):
 		
 		return("Enemy()")
 
-	def move(self,player1,player2):
+	def move(self,player1,player2,walls):
 		if player2 == None:
 			if self.x < player1.x:
 				self.xSpeed = self.speed
@@ -77,6 +80,45 @@ class Enemy(object):
 					self.ySpeed = 0
 
 
+		enemyRect = pygame.Rect((self.x+self.xSpeed,self.y+self.ySpeed),(self.spriteHeight,self.spriteWidth))
+		collide = False
+		for wall in walls:
+			if wall.colliderect(enemyRect):
+
+				self.xSpeed = 0
+				self.ySpeed = 0
+
+
+				if self.x >= wall.left and self.y <= wall.top:
+					self.xSpeed = -self.speed 
+
+				if self.x >= wall.left and self.y >= wall.bottom:
+					self.xSpeed = -self.speed
+
+				if self.x <= wall.left and self.y < wall.bottom:
+					self.ySpeed = self.speed
+
+				if self.x >= wall.right and self.y < wall.bottom:
+					self.ySpeed = self.speed
+
+
+
+				self.updateSprite()
+
+				self.x += self.xSpeed
+				self.y += self.ySpeed
+
+				collide = True
+		
+
+		if not collide:
+			self.updateSprite()
+			self.x += self.xSpeed
+			self.y += self.ySpeed
+
+
+
+	def updateSprite(self):
 		if self.xSpeed > 0 and self.ySpeed > 0:
 			self.sprite = 'sprites/zrightdown.gif'
 		if self.xSpeed > 0 and self.ySpeed < 0:
@@ -95,18 +137,17 @@ class Enemy(object):
 		if self.ySpeed > 0 and self.xSpeed == 0:
 			self.sprite = 'sprites/zdown.gif'	
 
-		self.x += self.xSpeed
-		self.y += self.ySpeed
-
-
 	def kill(self):
 		self.dead = True
 	
 	def draw(self,screen):
 		if not self.dead:
 
-			self.rect = pygame.Rect((self.x,self.y),(0,0))
+			
 			sprite = pygame.image.load(self.sprite)
+			self.spriteWidth = sprite.get_rect().size[0]
+			self.spriteHeight = sprite.get_rect().size[1]
+			self.rect = pygame.Rect((self.x,self.y),(self.spriteHeight//2,self.spriteWidth//2))
 			screen.blit(sprite,self.rect)
 
 

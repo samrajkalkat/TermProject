@@ -21,7 +21,6 @@ def handleServerMsg(server,serverMsg):
 	msg = ''
 	command = ''
 	while True:
-
 		msg += server.recv(2048).decode('UTF-8')
 		print(msg)
 		command = msg.split('\n')
@@ -30,7 +29,6 @@ def handleServerMsg(server,serverMsg):
 			msg = '\n'.join(command[1:])
 			serverMsg.put(readyMsg)
 			command = msg.split('\n')
-
 
 import pygame
 from player import *
@@ -44,15 +42,14 @@ BLUE =  (  0,   0, 255)
 GREEN = (  0, 255,   0)
 RED =   (255,   0,   0)
 
-
 #pygame framework from provided gitbook
 #slightly modified to fit needs of my game
 class PygameGame(object):
 
 	def drawStartScreen(self,screen):
-		image = pygame.image.load("titleScreen.jpg")
-		image = pygame.transform.scale(image, (550, 550))
-		screen.blit(image,(0,0))
+		# image = pygame.image.load("titleScreen.jpg")
+		# image = pygame.transform.scale(image, (550, 550))
+		# screen.blit(image,(0,0))
 		self.drawText(screen,'Welcome!',(self.width/2,self.height/4),80,WHITE)
 		self.drawText(screen,"Press 'p' to start",(self.width/2,3*self.height/4),40,WHITE)
 
@@ -79,12 +76,15 @@ class PygameGame(object):
 		image = pygame.image.load("terrain.png")
 		image = pygame.transform.scale(image, (550, 550))
 		screen.fill((225,225,225))
-		screen.blit(image,(0,0))
+		self.drawText(screen,"Score: %s" % (self.player.score),(self.width-55,30),30,BLACK)
+		# screen.blit(image,(0,0))
 
 	def initMultiPlayerGame(self,screen):
 		image = pygame.image.load("terrain.png")
-		screen.blit(image,(0,0))
-		# screen.fill((225,225,225))
+		# screen.blit(image,(0,0))
+		screen.fill((225,225,225))
+		self.drawText(screen,"Player1: %s" % (self.player.score),(self.width-55,30),30,BLACK)
+		self.drawText(screen,"Player2: %s" % (self.player2.score),(self.width-55,55),30,BLACK)
 
 	def drawText(self,screen,text,center,size,color):
 		#helper function to draw text on the screen
@@ -93,6 +93,12 @@ class PygameGame(object):
 		text = font.render(text,True,color)
 		textBox = text.get_rect(center=center)
 		screen.blit(text,textBox)
+
+
+	def drawBlood(self,screen):
+		image = pygame.image.load('sprites/blood.gif')
+		for blood in self.blood:
+			screen.blit(image,(blood[0],blood[1]))
 
 
 	def readServerMsg(self):
@@ -121,6 +127,9 @@ class PygameGame(object):
 
 
 		self.myID = ''
+		self.blood = set()
+
+
 
 	def mousePressed(self, x, y):
 		pass
@@ -159,6 +168,7 @@ class PygameGame(object):
 			if self.gameOver:
 				if keyCode == pygame.K_r:
 					del self.enemyList[:]
+					del self.walls[:]
 					self.player.respawn()
 					self.gameOver = False
 
@@ -179,36 +189,117 @@ class PygameGame(object):
 					bulletRect = pygame.Rect(bullet[0],bullet[1],player.bulletW,player.bulletH)
 					enemyRect = pygame.Rect(enemy.x,enemy.y,enemy.width,enemy.height)
 					if bulletRect.colliderect(enemyRect):
-						player.bulletSet.remove(bullet)
-						enemy.health -= 1
+						try:
+							if bullet[2] == 'downRight':
+								enemy.x += 6
+								enemy.y += 6
+							if bullet[2] == 'upRight':
+								enemy.x += 6
+								enemy.y -= 6
+							if bullet[2] == 'downLeft':
+								enemy.x -= 6
+								enemy.y += 6
+							if bullet[2] == 'upLeft':
+								enemy.x -= 6
+								enemy.y -= 6
+							if bullet[2] == 'left':
+								enemy.x -= 6
+							if bullet[2] == 'right':
+								enemy.x += 6
+							if bullet[2] == 'up':
+								enemy.y -= 6
+							if bullet[2] == 'down':
+								enemy.y += 6
+							player.bulletSet.remove(bullet)
+							enemy.health -= 1
+						except:
+							print('no bullet to remove')
 						if enemy.health == 0:
-							self.enemyList.remove(enemy)
-							player.score += 1
-							break
+							try:
+								self.blood.add((enemy.x,enemy.y))
+								self.enemyList.remove(enemy)
+								player.score += 1
+								break
+							except:
+								print('no enemy to delete')
 		else:
 			for bullet in player.bulletSet:
 				for enemy in self.enemyList:
 					bulletRect = pygame.Rect(bullet[0],bullet[1],player.bulletW,player.bulletH)
 					enemyRect = pygame.Rect(enemy.x,enemy.y,enemy.width,enemy.height)
 					if bulletRect.colliderect(enemyRect):
-						player.bulletSet.remove(bullet)
-						enemy.health -= 1
+						try:
+							if bullet[2] == 'downRight':
+								enemy.x += 6
+								enemy.y += 6
+							if bullet[2] == 'upRight':
+								enemy.x += 6
+								enemy.y -= 6
+							if bullet[2] == 'downLeft':
+								enemy.x -= 6
+								enemy.y += 6
+							if bullet[2] == 'upLeft':
+								enemy.x -= 6
+								enemy.y -= 6
+							if bullet[2] == 'left':
+								enemy.x -= 6
+							if bullet[2] == 'right':
+								enemy.x += 6
+							if bullet[2] == 'up':
+								enemy.y -= 6
+							if bullet[2] == 'down':
+								enemy.y += 6
+							player.bulletSet.remove(bullet)
+							enemy.health -= 1
+						except:
+							print('no bullet to remove')
 						if enemy.health == 0:
-							self.enemyList.remove(enemy)
-							player.score += 1
-							break
+							try:
+								self.blood.add((enemy.x,enemy.y))
+								self.enemyList.remove(enemy)
+								player.score += 1
+								break
+							except:
+								print('no enemy to delete')
 
 			for bullet in player2.bulletSet:
 				for enemy in self.enemyList:
 					bulletRect = pygame.Rect(bullet[0],bullet[1],player2.bulletW,player2.bulletH)
 					enemyRect = pygame.Rect(enemy.x,enemy.y,enemy.width,enemy.height)
 					if bulletRect.colliderect(enemyRect):
-						player2.bulletSet.remove(bullet)
-						enemy.health -= 1
+						try:
+							if bullet[2] == 'downRight':
+								enemy.x += 6
+								enemy.y += 6
+							if bullet[2] == 'upRight':
+								enemy.x += 6
+								enemy.y -= 6
+							if bullet[2] == 'downLeft':
+								enemy.x -= 6
+								enemy.y += 6
+							if bullet[2] == 'upLeft':
+								enemy.x -= 6
+								enemy.y -= 6
+							if bullet[2] == 'left':
+								enemy.x -= 6
+							if bullet[2] == 'right':
+								enemy.x += 6
+							if bullet[2] == 'up':
+								enemy.y -= 6
+							if bullet[2] == 'down':
+								enemy.y += 6
+							player2.bulletSet.remove(bullet)
+							enemy.health -= 1
+						except:
+							print('no bullet to remove')
 						if enemy.health == 0:
-							self.enemyList.remove(enemy)
-							player2.score += 1
-							break
+							try:
+								self.blood.add((enemy.x,enemy.y))
+								self.enemyList.remove(enemy)
+								playe2.score += 1
+								break
+							except:
+								print('no enemy to delete')
 
 
 	def didEnemyHitPlayer(self):
@@ -218,10 +309,36 @@ class PygameGame(object):
 				self.player.health -= 1
 
 
+	def generateWalls(self):
+		x = random.randint(50,400)
+		y = random.randint(50,400)
+		wallRect = pygame.Rect((x,y),(74,74))
+		playerRect = pygame.Rect(275,275,20,20)
+		if (len(self.walls) == 0):
+			self.walls.append(wallRect)
+			message = 'newWall %s %s\n' % (x,y)
+			self.server.send(message.encode())
+
+		else:
+			if wallRect.collidelist(self.walls) == -1 and wallRect.colliderect(playerRect) == False:
+				self.walls.append(wallRect)
+				message = 'newWall %s %s\n' % (x,y)
+				self.server.send(message.encode())
+
+	def drawWalls(self,screen):
+		
+		for wallRect in self.walls:
+			sprite = pygame.image.load('sprites/wall.png')
+			sprite = pygame.transform.scale(sprite,(74,74))
+			screen.blit(sprite,wallRect)
+
+
+
+
+
 
 	def timerFired(self,dt):
 		
-
 		while self.serverMsg.qsize() > 0:
 			msg = self.serverMsg.get(False)
 			if type(msg) == dict:
@@ -255,19 +372,39 @@ class PygameGame(object):
 
 					if cmd == 'fired':
 						self.player2.fire()
+
+					if cmd == 'newWall':
+						print('received')
+						x = int(msg[2])
+						y = int(msg[3])
+						print(x,y)
+						wallRect = pygame.Rect((x,y),(74,74))
+						self.walls.append(wallRect)
 						
 		if self.singlePlayer:
 			self.moveEnemies()
 			self.didBulletHitEnemy(self.enemy, self.player,None)
 			self.didEnemyHitPlayer()
+
+			
+			for bullet in self.player.bulletSet:
+				bulletRect = pygame.Rect(bullet[0],bullet[1],self.player.bulletW,self.player.bulletH)
+				if bulletRect.collidelist(self.walls) != -1:
+					self.player.bulletSet.remove(bullet)
+	
+
 			if not self.gameOver:
 				self.createEnemies()
 			if self.player.health <= 0:
 				self.gameOver = True
+				self.blood.clear()
 
 		if self.multiPlayer:
 			if self.myID == 'p1':
 				if self.bothPlayersReady:
+					
+					while len(self.walls) <4:
+						self.generateWalls()
 					self.createEnemies()
 
 			self.moveEnemies()
@@ -279,10 +416,10 @@ class PygameGame(object):
 	def moveEnemies(self):
 		if self.singlePlayer:
 			for enemy in self.enemyList:
-				enemy.move(self.player,None)
+				enemy.move(self.player,None,self.walls)
 		elif self.multiPlayer:
 			for enemy in self.enemyList:
-				enemy.move(self.player,self.player2)
+				enemy.move(self.player,self.player2,self.walls)
 		
    
 	def createEnemies(self):
@@ -306,9 +443,17 @@ class PygameGame(object):
 			self.menuScreen = False
 			self.startScreen = False
 			self.initSinglePlayerGame(screen)
+			self.drawBlood(screen)
+
+			if self.myID == 'p1':
+				while len(self.walls) < 4:
+					self.generateWalls()
+
+			self.drawWalls(screen)
 			self.player.draw(screen)
 			for enemy in self.enemyList:
 				enemy.draw(screen)
+
 			self.player.displayHealth(screen)  
 
 		if self.gameOver:
@@ -317,6 +462,12 @@ class PygameGame(object):
 		if self.multiPlayer:
 
 			self.initMultiPlayerGame(screen)
+			self.drawBlood(screen)
+
+			
+
+			self.drawWalls(screen)
+
 			self.player.draw(screen)
 			self.player2.draw(screen)
 			for enemy in self.enemyList:
@@ -345,6 +496,8 @@ class PygameGame(object):
 		self.gameOver = False
 		self.bothPlayersReady = False
 
+		self.walls = []
+
 		pygame.init()
 
 	def run(self,serverMsg=None,server=None):
@@ -366,6 +519,7 @@ class PygameGame(object):
 			self.timerFired(time)
 
 			if self.singlePlayer:
+
 				keys = pygame.key.get_pressed()
 				dx = 0
 				dy = 0
@@ -378,7 +532,11 @@ class PygameGame(object):
 				if keys[pygame.K_RIGHT]:
 					dx = 3  
 
-				self.player.move(dx,dy)
+				playerRect = pygame.Rect((self.player.x+dx,self.player.y+dy),(self.player.spriteWidth//2, self.player.spriteHeight//2))
+				
+				if playerRect.collidelist(self.walls) == -1:
+					self.player.move(dx,dy)
+
 
 			if self.multiPlayer:
 
@@ -396,9 +554,12 @@ class PygameGame(object):
 					if keys[pygame.K_RIGHT]:
 						dx = 3  
 
-					self.player.move(dx,dy)
-					message = 'playerMoved %d %d\n' %(dx,dy)
-					self.server.send(message.encode())
+					playerRect = pygame.Rect((self.player.x+dx,self.player.y+dy),(self.player.spriteWidth//2, self.player.spriteHeight//2))
+				
+					if playerRect.collidelist(self.walls) == -1:
+						self.player.move(dx,dy)
+						message = 'playerMoved %d %d\n' %(dx,dy)
+						self.server.send(message.encode())
 
 
 			for event in pygame.event.get():

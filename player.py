@@ -3,6 +3,7 @@ import pygame,random
 class Player(object):
 
 	def __init__(self,color):
+		self.color = color
 	
 		self.x = 275
 		self.y = 275
@@ -25,12 +26,19 @@ class Player(object):
 
 		self.bulletSpeed = 10
 
-		self.sprite = 'sprites/pDown.png'
+		if self.color == 'red':
+			self.sprite = 'sprites/pDown.png'
+		if self.color == 'blue':
+			self.sprite = 'sprites/p2Down.png'
+		else:
+			self.sprite = 'sprites/p2Down.png'
 
 		self.bulletSet = []
 		self.rect = pygame.Rect
 
-		self.color = color
+		self.spriteHeight = 0
+		self.spriteWidth = 0
+		
 
 		self.dead = False
 
@@ -54,7 +62,7 @@ class Player(object):
 		self.y += dy
 
 		#setting player direction based on direction of movement
-		if self.color == 'blue':
+		if self.color == 'red':
 			if dx > 0 and dy > 0:
 				self.direction = 'downRight'
 				self.sprite = 'sprites/pDownRight.png'
@@ -84,7 +92,7 @@ class Player(object):
 				self.direction = 'down'
 				self.sprite = 'sprites/pDown.png'
 
-		if self.color == 'red':
+		if self.color == 'blue':
 			if dx > 0 and dy > 0:
 				self.direction = 'downRight'
 				self.sprite = 'sprites/p2DownRight.png'
@@ -157,7 +165,7 @@ class Player(object):
 	def drawBullets(self,screen):
 		for bullet in self.bulletSet:
 			center = (int(bullet[0]),int(bullet[1]))
-			pygame.draw.circle(screen,(255,0,0),center,5)
+			pygame.draw.circle(screen,(0,0,0),center,2)
 
 
 	def displayHealth(self,screen):
@@ -172,11 +180,11 @@ class Player(object):
 		self.moveBullets()
 
 		sprite = pygame.image.load(self.sprite)
-		spriteWidth = sprite.get_rect().size[0]
-		spriteHeight = sprite.get_rect().size[1]
-		sprite = pygame.transform.scale(sprite, (spriteWidth//2, spriteHeight//2))
+		self.spriteWidth = sprite.get_rect().size[0]
+		self.spriteHeight = sprite.get_rect().size[1]
+		sprite = pygame.transform.scale(sprite, (self.spriteWidth//2, self.spriteHeight//2))
 
-		self.rect = pygame.Rect((self.x,self.y),(spriteWidth//2,spriteHeight//2))
+		self.rect = pygame.Rect((self.x,self.y),(self.spriteWidth//2,self.spriteHeight//2))
 		self.centerX = self.rect.centerx
 		self.centerY = self.rect.centery
 
