@@ -310,20 +310,21 @@ class PygameGame(object):
 
 
 	def generateWalls(self):
-		x = random.randint(50,400)
-		y = random.randint(50,400)
+		x = random.randint(50,500)
+		y = random.randint(50,500)
 		wallRect = pygame.Rect((x,y),(74,74))
-		playerRect = pygame.Rect(275,275,20,20)
+		playerRect = pygame.Rect((275,275),(25,25))
 		if (len(self.walls) == 0):
 			self.walls.append(wallRect)
 			message = 'newWall %s %s\n' % (x,y)
 			self.server.send(message.encode())
 
 		else:
-			if wallRect.collidelist(self.walls) == -1 and wallRect.colliderect(playerRect) == False:
-				self.walls.append(wallRect)
-				message = 'newWall %s %s\n' % (x,y)
-				self.server.send(message.encode())
+			if wallRect.collidelist(self.walls) == -1:
+				if playerRect.collidelist(self.walls) == -1:
+					self.walls.append(wallRect)
+					message = 'newWall %s %s\n' % (x,y)
+					self.server.send(message.encode())
 
 	def drawWalls(self,screen):
 		
@@ -331,10 +332,6 @@ class PygameGame(object):
 			sprite = pygame.image.load('sprites/wall.png')
 			sprite = pygame.transform.scale(sprite,(74,74))
 			screen.blit(sprite,wallRect)
-
-
-
-
 
 
 	def timerFired(self,dt):
@@ -426,7 +423,7 @@ class PygameGame(object):
 		self.counter += 1
 		if self.counter % 30 == 0:
 			x = random.randint(135,412)
-			y = random.choice([-5,555])
+			y = random.choice([-5])
 			enemy = Enemy(x,y)
 			self.enemyList.append(enemy)
 			message = 'newEnemy %s %s\n' % (x,y)
