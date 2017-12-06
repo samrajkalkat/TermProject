@@ -70,20 +70,24 @@ class PygameGame(object):
 		self.drawText(screen,"(press 'm' to return to menu)",(self.width/2,self.height/2 + 50),40,WHITE)
 
 	def drawPauseScreen(self,screen):
-		pass
+		screen.fill((255,255,255))
+		self.drawText(screen,'Game Paused',(self.width/2,self.height/4),50,BLUE)
+		self.drawText(screen,"(press 'r' to restart)",(self.width/2,self.height/2),40,BLUE)
+		self.drawText(screen,"(press 'm' to return to menu)",(self.width/2,self.height/2 + 50),40,BLUE)
 
 	def initSinglePlayerGame(self,screen):
 		image = pygame.image.load("terrain.png")
 		image = pygame.transform.scale(image, (550, 550))
 		screen.fill((225,225,225))
 		self.drawText(screen,"Score: %s" % (self.player.score),(self.width-55,30),30,BLACK)
+		
 		# screen.blit(image,(0,0))
 
 	def initMultiPlayerGame(self,screen):
 		image = pygame.image.load("terrain.png")
 		# screen.blit(image,(0,0))
 		screen.fill((225,225,225))
-		self.drawText(screen,"Player1: %s" % (self.player.score),(self.width-55,30),30,BLACK)
+		self.drawText(screen,"Score: %s" % (self.player.score),(self.width-55,30),30,BLACK)
 		self.drawText(screen,"Player2: %s" % (self.player2.score),(self.width-55,55),30,BLACK)
 
 	def drawText(self,screen,text,center,size,color):
@@ -152,6 +156,7 @@ class PygameGame(object):
 		if self.menuScreen:
 			if keyCode == pygame.K_1:
 				self.singlePlayer = True
+				self.generateWalls()
 			if keyCode == pygame.K_2:
 				self.multiPlayer = True
 				msg = 'otherPlayerReady %s\n' % (self.myID)
@@ -163,20 +168,83 @@ class PygameGame(object):
 
 
 		if self.singlePlayer:
-			if keyCode == pygame.K_SPACE:
-				self.player.fire()
-			if self.gameOver:
+
+			if not self.paused:
+				if keyCode == pygame.K_SPACE:
+					self.player.fire()
+
+	
+			if keyCode == pygame.K_ESCAPE:
+				print('paused')
+				self.paused = not self.paused
+
+			if self.paused:
 				if keyCode == pygame.K_r:
 					del self.enemyList[:]
 					del self.walls[:]
 					self.player.respawn()
+					self.generateWalls()
+					self.blood.clear()
+					self.paused = False
+
+				if keyCode == pygame.K_m:
+					del self.enemyList[:]
+					del self.walls[:]
+					self.player.respawn()
+					self.blood.clear()
+					self.multiPlayer = False
+					self.menuScreen = True
+					self.paused = False
+
+			if self.gameOver:
+				if keyCode == pygame.K_r:
+					del self.enemyList[:]
+					del self.walls[:]
+					self.blood.clear()
+					self.player.respawn()
 					self.gameOver = False
+					self.generateWalls()
 
 		if self.multiPlayer:
-			if keyCode == pygame.K_SPACE:
-				self.player.fire()
-				msg = 'fired %s\n' % (self.myID)
+
+			if not self.paused:
+				if keyCode == pygame.K_SPACE:
+					self.player.fire()
+					msg = 'fired %s\n' % (self.myID)
+					self.server.send(msg.encode())
+
+			if keyCode == pygame.K_ESCAPE:
+				print('paused')
+				self.paused = not self.paused
+				msg = 'paused %s\n' % (self.paused)
 				self.server.send(msg.encode())
+
+			if self.paused:
+				if keyCode == pygame.K_r:
+					msg = 'restart %s\n' % (self.myID)
+					self.server.send(msg.encode())
+
+					del self.enemyList[:]
+					del self.walls[:]
+					self.player.respawn()
+					self.player2.respawn()
+					if self.myID == 'p1':
+						self.generateWalls()
+					self.blood.clear()
+					self.paused = False
+
+				if keyCode == pygame.K_m:
+					msg = 'menu %s\n' % (self.paused)
+					self.server.send(msg.encode())
+
+					del self.enemyList[:]
+					del self.walls[:]
+					self.player.respawn()
+					self.player2.respawn()
+					self.blood.clear()
+					self.multiPlayer = False
+					self.menuScreen = True
+					self.paused = False
 
 	def keyReleased(self, keyCode, modifier):
 		pass
@@ -258,6 +326,10 @@ class PygameGame(object):
 								self.blood.add((enemy.x,enemy.y))
 								self.enemyList.remove(enemy)
 								player.score += 1
+
+								msg = 'myScore %s\n' % (player.score)
+								self.server.send(msg.encode())
+
 								break
 							except:
 								print('no enemy to delete')
@@ -310,21 +382,49 @@ class PygameGame(object):
 
 
 	def generateWalls(self):
-		x = random.randint(50,500)
-		y = random.randint(50,500)
-		wallRect = pygame.Rect((x,y),(74,74))
-		playerRect = pygame.Rect((275,275),(25,25))
-		if (len(self.walls) == 0):
-			self.walls.append(wallRect)
-			message = 'newWall %s %s\n' % (x,y)
-			self.server.send(message.encode())
+		# print('called')
+		# while (len(self.walls)<5):
+		# 	x = random.randint(50,500)
+		# 	y = random.randint(50,500)
+		# 	wallRect = pygame.Rect((x,y),(74,74))
+		# 	playerRect = pygame.Rect((275,275),(25,25))
+		# 	if (len(self.walls) == 0):
+		# 		self.walls.append(wallRect)
+		# 		message = 'newWall %s %s\n' % (x,y)
+		# 		self.server.send(message.encode())
 
-		else:
-			if wallRect.collidelist(self.walls) == -1:
-				if playerRect.collidelist(self.walls) == -1:
-					self.walls.append(wallRect)
-					message = 'newWall %s %s\n' % (x,y)
-					self.server.send(message.encode())
+		# 	else:
+		# 		if wallRect.collidelist(self.walls) == -1:
+		# 			if playerRect.collidelist(self.walls) == -1:
+		# 				print('added')
+		# 				self.walls.append(wallRect)
+		# 				message = 'newWall %s %s\n' % (x,y)
+		# 				self.server.send(message.encode())
+		# 			else:
+		# 				print('oh okay')
+		# 				x = random.randint(50,500)
+		# 				y = random.randint(50,500)
+		# 				wallRect = pygame.Rect((x,y),(74,74))
+		# 				playerRect = pygame.Rect((275,275),(25,25))
+
+		for x in range(5):
+			x = random.randint(50,500)
+			y = random.randint(50,500)
+			wallRect = pygame.Rect((x,y),(74,74))
+			playerRect = pygame.Rect((275,275),(25,25))
+
+			if len(self.walls) > 0:
+				if wallRect.collidelist(self.walls) == -1:
+					if playerRect.collidelist(self.walls) == -1:
+						self.walls.append(wallRect)
+						message = 'newWall %s %s\n' % (x,y)
+						self.server.send(message.encode())
+			else:
+				self.walls.append(wallRect)
+				message = 'newWall %s %s\n' % (x,y)
+				self.server.send(message.encode())
+
+
 
 	def drawWalls(self,screen):
 		
@@ -359,6 +459,8 @@ class PygameGame(object):
 				if cmd == 'otherPlayerReady':
 					if self.multiPlayer:
 						self.bothPlayersReady = True
+						if self.myID == 'p1':
+							self.generateWalls()
 
 				if self.multiPlayer:
 					if cmd == 'newEnemy':
@@ -370,6 +472,34 @@ class PygameGame(object):
 					if cmd == 'fired':
 						self.player2.fire()
 
+					if cmd == 'paused':
+						self.paused = not self.paused
+
+					if cmd == 'restart':
+						if self.paused:
+							del self.enemyList[:]
+							del self.walls[:]
+							self.player.respawn()
+							self.player2.respawn()
+							if self.myID == 'p1':
+								self.generateWalls()
+							self.blood.clear()
+							self.paused = False
+
+					if cmd == 'menu':
+						if self.paused:
+							del self.enemyList[:]
+							del self.walls[:]
+							self.player.respawn()
+							self.player2.respawn()
+							self.blood.clear()
+							self.multiPlayer = False
+							self.menuScreen = True
+							self.paused = False
+
+					if cmd == 'myScore':
+						self.player2.score = int(msg[2])
+
 					if cmd == 'newWall':
 						print('received')
 						x = int(msg[2])
@@ -379,34 +509,36 @@ class PygameGame(object):
 						self.walls.append(wallRect)
 						
 		if self.singlePlayer:
-			self.moveEnemies()
-			self.didBulletHitEnemy(self.enemy, self.player,None)
-			self.didEnemyHitPlayer()
 
-			
-			for bullet in self.player.bulletSet:
-				bulletRect = pygame.Rect(bullet[0],bullet[1],self.player.bulletW,self.player.bulletH)
-				if bulletRect.collidelist(self.walls) != -1:
-					self.player.bulletSet.remove(bullet)
-	
+			if not self.paused:
+				self.moveEnemies()
+				self.didBulletHitEnemy(self.enemy, self.player,None)
+				self.didEnemyHitPlayer()
 
-			if not self.gameOver:
-				self.createEnemies()
-			if self.player.health <= 0:
-				self.gameOver = True
-				self.blood.clear()
+				
+				for bullet in self.player.bulletSet:
+					bulletRect = pygame.Rect(bullet[0],bullet[1],self.player.bulletW,self.player.bulletH)
+					if bulletRect.collidelist(self.walls) != -1:
+						self.player.bulletSet.remove(bullet)
+		
+
+				if not self.gameOver:
+					self.createEnemies()
+				if self.player.health <= 0:
+					self.gameOver = True
+					self.blood.clear()
 
 		if self.multiPlayer:
-			if self.myID == 'p1':
-				if self.bothPlayersReady:
-					
-					while len(self.walls) <4:
-						self.generateWalls()
-					self.createEnemies()
 
-			self.moveEnemies()
-			self.didBulletHitEnemy(self.enemy, self.player,self.player2)
-			self.didEnemyHitPlayer()
+			if not self.paused:
+				if self.myID == 'p1':
+					if self.bothPlayersReady:
+						
+						self.createEnemies()
+
+				self.moveEnemies()
+				self.didBulletHitEnemy(self.enemy, self.player,self.player2)
+				self.didEnemyHitPlayer()
 
 		
 
@@ -421,7 +553,7 @@ class PygameGame(object):
    
 	def createEnemies(self):
 		self.counter += 1
-		if self.counter % 30 == 0:
+		if self.counter % 60 == 0:
 			x = random.randint(135,412)
 			y = random.choice([-5])
 			enemy = Enemy(x,y)
@@ -442,9 +574,6 @@ class PygameGame(object):
 			self.initSinglePlayerGame(screen)
 			self.drawBlood(screen)
 
-			if self.myID == 'p1':
-				while len(self.walls) < 4:
-					self.generateWalls()
 
 			self.drawWalls(screen)
 			self.player.draw(screen)
@@ -452,6 +581,9 @@ class PygameGame(object):
 				enemy.draw(screen)
 
 			self.player.displayHealth(screen)  
+
+			if self.paused:
+				self.drawPauseScreen(screen)
 
 		if self.gameOver:
 			self.drawGameOverScreen(screen)
@@ -474,6 +606,9 @@ class PygameGame(object):
 			if not self.bothPlayersReady:
 				self.drawText(screen,'Waiting for Player 2...',(self.width/2,self.height/4),35,RED)
 
+			if self.paused:
+				self.drawPauseScreen(screen)
+
 	def isKeyPressed(self, key):
 		''' return whether a specific key is being held '''
 		return self._keys.get(key, False)
@@ -492,6 +627,7 @@ class PygameGame(object):
 		self.multiPlayer = False
 		self.gameOver = False
 		self.bothPlayersReady = False
+		self.paused = False
 
 		self.walls = []
 
@@ -529,10 +665,11 @@ class PygameGame(object):
 				if keys[pygame.K_RIGHT]:
 					dx = 3  
 
-				playerRect = pygame.Rect((self.player.x+dx,self.player.y+dy),(self.player.spriteWidth//2, self.player.spriteHeight//2))
+				playerRect = pygame.Rect((self.player.x+2*dx,self.player.y+2*dy),(self.player.spriteWidth//2, self.player.spriteHeight//2))
 				
 				if playerRect.collidelist(self.walls) == -1:
-					self.player.move(dx,dy)
+					if not self.paused:
+						self.player.move(dx,dy)
 
 
 			if self.multiPlayer:

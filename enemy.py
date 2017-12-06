@@ -83,7 +83,7 @@ class Enemy(object):
 
 		
 
-		enemyRect = pygame.Rect((self.x+self.xSpeed*10,self.y+self.ySpeed*10),(self.spriteHeight+4,self.spriteWidth))
+		enemyRect = pygame.Rect((self.x+self.xSpeed*10,self.y+self.ySpeed*10),(self.spriteHeight+5,self.spriteWidth+5))
 		self.updateSprite()
 
 		# if self.ySpeed > 0:
@@ -101,7 +101,9 @@ class Enemy(object):
 				self.y += 0
 				enemyRect = pygame.Rect((self.x,self.y),(self.spriteHeight,self.spriteWidth))
 
-	
+
+
+		self.updateSprite()
 		self.x += self.xSpeed
 		self.y += self.ySpeed
 			

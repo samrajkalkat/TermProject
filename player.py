@@ -124,7 +124,19 @@ class Player(object):
 				self.sprite = 'sprites/p2Down.png'
 
 	def fire(self):
-		self.bulletSet.append([self.centerX,self.centerY,self.direction])
+		xOffset = 0
+		yOffset = 0
+
+		if self.direction == 'left':
+			yOffset = -10
+		if self.direction == 'right':
+			yOffset = 7
+		if self.direction == 'up':
+			xOffset = 10
+		if self.direction == 'down':
+			xOffset = -10
+
+		self.bulletSet.append([self.centerX+xOffset,self.centerY+yOffset,self.direction])
 
 
 	def respawn(self):
@@ -132,6 +144,7 @@ class Player(object):
 		self.x = 275
 		self.y = 275
 		self.direction = 'down'
+		self.sprite = 'sprites/pDown.png'
 		self.score = 0
 
 	def moveBullets(self):
