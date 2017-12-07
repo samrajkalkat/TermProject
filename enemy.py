@@ -15,15 +15,20 @@ class Enemy(object):
 		self.ySpeed = 0
 		self.color = (255,200,0)
 		self.health = 100
-		# self.direction = down
+		self.direction = ''
 		self.speed = 0.6
 		self.health = 3
+
+		self.name = 'reg'
 
 		self.rect = pygame.Rect
 		self.sprite = 'sprites/zdown.gif'
 
 		self.spriteHeight = 0
 		self.spriteWidth = 0
+
+		self.centerX = 0
+		self.centerY = 0
 
 
 		print('New enemy created')
@@ -139,6 +144,8 @@ class Enemy(object):
 			self.spriteHeight = sprite.get_rect().size[1]
 			self.rect = pygame.Rect((self.x,self.y),(self.spriteHeight//2,self.spriteWidth//2))
 			screen.blit(sprite,self.rect)
+			self.centerX = self.rect.centerx
+			self.centerY = self.rect.centery
 
 
 			# pygame.draw.rect(screen,self.color,
@@ -147,17 +154,106 @@ class Enemy(object):
 
 
 class Boss(Enemy):
-	def __init__(self):	
-		self.x = random.randint(0,650)
-		self.y = random.randint(0,650)
+	def __init__(self,x,y):	
+		self.id = ''
+
+		self.x = x
+		self.y = y
+
 		self.dead = False
 		self.width = 30
 		self.height = 30
 		self.xSpeed = 0
 		self.ySpeed = 0
-		self.color = (255,0,0)
+		self.color = (255,200,0)
 		self.health = 100
 		# self.direction = down
-		self.speed = 1
+		self.speed = 0.3
 		self.health = 5
+
+		self.name = 'boss'
+
+		self.rect = pygame.Rect
+		self.sprite = 'sprites/zdown.gif'
+
+		self.spriteHeight = 0
+		self.spriteWidth = 0
+
+		self.bulletSet = []
+		self.bulletSpeed = 0
+
+		self.centerX = 0
+		self.centerY = 0
+
+		print('New enemy created')
+	
+		#self.weapon = weapon
+		# self.sprite = sprite #implement sprite selection for different characters
+
+	def __repr__(self):
+		
+		return("Boss()")
+
+	def updateSprite(self):
+		if self.xSpeed > 0 and self.ySpeed > 0:
+			self.sprite = 'sprites/dDownRight.gif'
+			self.direction = 'downRight'
+		if self.xSpeed > 0 and self.ySpeed < 0:
+			self.sprite = 'sprites/dUpRight.gif'
+			self.direction = 'upRight'	
+		if self.xSpeed < 0 and self.ySpeed > 0:
+			self.sprite = 'sprites/dDownLeft.gif'
+			self.direction = 'downLeft'	
+		if self.xSpeed < 0 and self.ySpeed < 0:
+			self.sprite = 'sprites/dUpLeft.gif'
+			self.direction = 'upLeft'
+
+		if self.xSpeed < 0 and self.ySpeed == 0:
+			self.sprite = 'sprites/dLeft.gif'
+			self.direction = 'left'
+		if self.xSpeed > 0 and self.ySpeed == 0:
+			self.sprite = 'sprites/dRight.gif'
+			self.direction = 'right'
+		if self.ySpeed < 0 and self.xSpeed == 0:
+			self.sprite = 'sprites/dUp.gif'
+			self.direction = 'up'
+		if self.ySpeed > 0 and self.xSpeed == 0:
+			self.sprite = 'sprites/dDown.gif'
+			self.direction = 'down'	
+
+	def moveBullets(self):
+		for bullet in self.bulletSet:
+			if bullet[2] == 'right':
+				bullet[0] += self.bulletSpeed
+			if bullet[2] == 'left':
+				bullet[0] -= self.bulletSpeed
+			if bullet[2] == 'up':
+				bullet[1] -= self.bulletSpeed
+			if bullet[2] == 'down':
+				bullet[1] += self.bulletSpeed
+			if bullet[2] == 'downRight':
+				bullet[0] += self.bulletSpeed
+				bullet[1] += self.bulletSpeed
+			if bullet[2] == 'downLeft':
+				bullet[0] -= self.bulletSpeed
+				bullet[1] += self.bulletSpeed
+			if bullet[2] == 'upRight':
+				bullet[0] += self.bulletSpeed
+				bullet[1] -= self.bulletSpeed
+			if bullet[2] == 'upLeft':
+				bullet[0] -= self.bulletSpeed
+				bullet[1] -= self.bulletSpeed
+
+			if bullet[0] > 650 or bullet[0] < 0:
+				self.bulletSet.remove(bullet)
+			elif bullet[1] > 650 or bullet[1] < 0:
+				self.bulletSet.remove(bullet)
+
+	def drawBullets(self,screen):
+		for bullet in self.bulletSet:
+			center = (int(bullet[0]),int(bullet[1]))
+			pygame.draw.circle(screen,(0,0,0),center,2)
+
+	def fire(self):
+		self.bulletSet.append([self.centerX,self.centerY,self.direction])
 

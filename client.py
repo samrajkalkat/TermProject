@@ -78,10 +78,11 @@ class PygameGame(object):
 	def initSinglePlayerGame(self,screen):
 		image = pygame.image.load("terrain.png")
 		image = pygame.transform.scale(image, (550, 550))
-		screen.fill((225,225,225))
+		# screen.fill((225,225,225))
+		screen.blit(image,(0,0))
 		self.drawText(screen,"Score: %s" % (self.player.score),(self.width-55,30),30,BLACK)
 		
-		# screen.blit(image,(0,0))
+		
 
 	def initMultiPlayerGame(self,screen):
 		image = pygame.image.load("terrain.png")
@@ -192,7 +193,7 @@ class PygameGame(object):
 					del self.walls[:]
 					self.player.respawn()
 					self.blood.clear()
-					self.multiPlayer = False
+					self.singlePlayer = False
 					self.menuScreen = True
 					self.paused = False
 
@@ -382,47 +383,24 @@ class PygameGame(object):
 
 
 	def generateWalls(self):
-		# print('called')
-		# while (len(self.walls)<5):
-		# 	x = random.randint(50,500)
-		# 	y = random.randint(50,500)
-		# 	wallRect = pygame.Rect((x,y),(74,74))
-		# 	playerRect = pygame.Rect((275,275),(25,25))
-		# 	if (len(self.walls) == 0):
-		# 		self.walls.append(wallRect)
-		# 		message = 'newWall %s %s\n' % (x,y)
-		# 		self.server.send(message.encode())
-
-		# 	else:
-		# 		if wallRect.collidelist(self.walls) == -1:
-		# 			if playerRect.collidelist(self.walls) == -1:
-		# 				print('added')
-		# 				self.walls.append(wallRect)
-		# 				message = 'newWall %s %s\n' % (x,y)
-		# 				self.server.send(message.encode())
-		# 			else:
-		# 				print('oh okay')
-		# 				x = random.randint(50,500)
-		# 				y = random.randint(50,500)
-		# 				wallRect = pygame.Rect((x,y),(74,74))
-		# 				playerRect = pygame.Rect((275,275),(25,25))
 
 		for x in range(5):
 			x = random.randint(50,500)
 			y = random.randint(50,500)
 			wallRect = pygame.Rect((x,y),(74,74))
-			playerRect = pygame.Rect((275,275),(25,25))
+			playerRect = pygame.Rect((275,275),(50,50))
 
 			if len(self.walls) > 0:
 				if wallRect.collidelist(self.walls) == -1:
-					if playerRect.collidelist(self.walls) == -1:
+					if not wallRect.colliderect(playerRect):
 						self.walls.append(wallRect)
 						message = 'newWall %s %s\n' % (x,y)
 						self.server.send(message.encode())
 			else:
-				self.walls.append(wallRect)
-				message = 'newWall %s %s\n' % (x,y)
-				self.server.send(message.encode())
+				if not wallRect.colliderect(playerRect):
+					self.walls.append(wallRect)
+					message = 'newWall %s %s\n' % (x,y)
+					self.server.send(message.encode())
 
 
 
@@ -543,9 +521,16 @@ class PygameGame(object):
 		
 
 	def moveEnemies(self):
+		distance = lambda x1,y1,x2,y2: math.sqrt((x2-x1)**2 + (y2-y1)**2)
+
 		if self.singlePlayer:
 			for enemy in self.enemyList:
 				enemy.move(self.player,None,self.walls)
+				if self.enemy.name == 'boss':
+					print('asdhfklas')
+					if distance(enemy.x,enemy.y,self.player.x,self.player.y) <= 10:
+						print('fire')
+
 		elif self.multiPlayer:
 			for enemy in self.enemyList:
 				enemy.move(self.player,self.player2,self.walls)
@@ -553,13 +538,31 @@ class PygameGame(object):
    
 	def createEnemies(self):
 		self.counter += 1
-		if self.counter % 60 == 0:
-			x = random.randint(135,412)
-			y = random.choice([-5])
-			enemy = Enemy(x,y)
-			self.enemyList.append(enemy)
-			message = 'newEnemy %s %s\n' % (x,y)
-			self.server.send(message.encode())
+		
+		if self.multiPlayer:
+			if self.counter % 30 == 0:
+				x = random.randint(135,412)
+				y = random.choice([-5,555])
+				enemy = Enemy(x,y)
+				self.enemyList.append(enemy)
+				message = 'newEnemy %s %s\n' % (x,y)
+				self.server.send(message.encode())
+		else:
+			if self.counter % 60 == 0:
+				x = random.randint(135,412)
+				y = random.choice([-5,555])
+				enemy = Enemy(x,y)
+				self.enemyList.append(enemy)
+				message = 'newEnemy %s %s\n' % (x,y)
+				self.server.send(message.encode())
+
+				if self.counter % 120 == 0:
+					x = random.randint(135,412)
+					y = random.choice([-5,555])
+					enemy = Boss(x,y)
+					self.enemyList.append(enemy)
+
+
 
 
 

@@ -144,7 +144,7 @@ class Player(object):
 		self.x = 275
 		self.y = 275
 		self.direction = 'down'
-		self.sprite = 'sprites/pDown.png'
+		self.sprite = 'sprites/p2Down.png'
 		self.score = 0
 
 	def moveBullets(self):
