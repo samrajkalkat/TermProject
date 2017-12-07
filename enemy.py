@@ -1,4 +1,8 @@
 import pygame,random,math
+import time
+
+#class code for the enemies and bosses
+#AI movement and draw functions for the enemies
 
 class Enemy(object):
 
@@ -41,6 +45,9 @@ class Enemy(object):
 		return("Enemy()")
 
 	def move(self,player1,player2,walls):
+
+		#moving to the closest player
+
 		distance = lambda x1,y1,x2,y2: math.sqrt((x2-x1)**2 + (y2-y1)**2)
 
 		if player2 == None:
@@ -59,6 +66,8 @@ class Enemy(object):
 
 		else:
 			
+			#checking which palyer is closer and moving towards that player
+
 			if distance(self.x,self.y,player2.x,player2.y) <= distance(self.x,self.y,player1.x,player1.y):
 				if self.x < player2.x:
 					self.xSpeed = self.speed
@@ -86,34 +95,45 @@ class Enemy(object):
 				if abs(self.y - player1.y) <= 5:
 					self.ySpeed = 0
 
-		
+		try:
 
-		enemyRect = pygame.Rect((self.x+self.xSpeed*10,self.y+self.ySpeed*10),(self.spriteHeight+5,self.spriteWidth+5))
-		self.updateSprite()
+			#creating the enemy rect for a few steps ahead of current posistion
+			enemyRect = pygame.Rect((self.x+self.xSpeed*10,self.y+self.ySpeed*10),(self.spriteHeight+5,self.spriteWidth+5))
+			self.updateSprite()
 
-		# if self.ySpeed > 0:
-		while enemyRect.collidelist(walls) != -1:
-			if self.x <= walls[enemyRect.collidelist(walls)].left:
-				self.x -= .4
-				self.y += 0
-				enemyRect = pygame.Rect((self.x,self.y),(self.spriteHeight,self.spriteWidth))
-			elif self.x >= walls[enemyRect.collidelist(walls)].right:
-				self.x += .4
-				self.y += 0
-				enemyRect = pygame.Rect((self.x,self.y),(self.spriteHeight,self.spriteWidth))
-			else:
-				self.x += .4
-				self.y += 0
-				enemyRect = pygame.Rect((self.x,self.y),(self.spriteHeight,self.spriteWidth))
+			# if self.ySpeed > 0:
 
+			count = 0
 
+			#checking wall collision and moving around the walls based on posistion
+			while enemyRect.collidelist(walls) != -1 and count < 30:
+				print('moving')
+				if self.x <= walls[enemyRect.collidelist(walls)].left:
+					self.x -= .4
+					self.y += 0
+					count += 1
+					enemyRect = pygame.Rect((self.x,self.y),(self.spriteHeight,self.spriteWidth))
+				elif self.x >= walls[enemyRect.collidelist(walls)].right:
+					self.x += .4
+					self.y += 0
+					count += 1
+					enemyRect = pygame.Rect((self.x,self.y),(self.spriteHeight,self.spriteWidth))
+				else:
+					self.x += 2
+					self.y += 0
+					count += 1
+					enemyRect = pygame.Rect((self.x,self.y),(self.spriteHeight,self.spriteWidth))
 
-		self.updateSprite()
-		self.x += self.xSpeed
-		self.y += self.ySpeed
-			
+			self.updateSprite()
+			self.x += self.xSpeed
+			self.y += self.ySpeed
+
+		except:
+			print('')
+				
 
 	def updateSprite(self):
+		#updating sprite depending on speed vectors
 		if self.xSpeed > 0 and self.ySpeed > 0:
 			self.sprite = 'sprites/zrightdown.gif'
 		if self.xSpeed > 0 and self.ySpeed < 0:
@@ -136,9 +156,10 @@ class Enemy(object):
 		self.dead = True
 	
 	def draw(self,screen):
-		if not self.dead:
 
-			
+		#drawing the enemy in posistion
+
+		if not self.dead:	
 			sprite = pygame.image.load(self.sprite)
 			self.spriteWidth = sprite.get_rect().size[0]
 			self.spriteHeight = sprite.get_rect().size[1]
@@ -169,7 +190,7 @@ class Boss(Enemy):
 		self.health = 100
 		# self.direction = down
 		self.speed = 0.3
-		self.health = 5
+		self.health = 8
 
 		self.name = 'boss'
 
@@ -195,6 +216,7 @@ class Boss(Enemy):
 		return("Boss()")
 
 	def updateSprite(self):
+		#updating sprite for boss
 		if self.xSpeed > 0 and self.ySpeed > 0:
 			self.sprite = 'sprites/dDownRight.gif'
 			self.direction = 'downRight'
@@ -220,40 +242,3 @@ class Boss(Enemy):
 		if self.ySpeed > 0 and self.xSpeed == 0:
 			self.sprite = 'sprites/dDown.gif'
 			self.direction = 'down'	
-
-	def moveBullets(self):
-		for bullet in self.bulletSet:
-			if bullet[2] == 'right':
-				bullet[0] += self.bulletSpeed
-			if bullet[2] == 'left':
-				bullet[0] -= self.bulletSpeed
-			if bullet[2] == 'up':
-				bullet[1] -= self.bulletSpeed
-			if bullet[2] == 'down':
-				bullet[1] += self.bulletSpeed
-			if bullet[2] == 'downRight':
-				bullet[0] += self.bulletSpeed
-				bullet[1] += self.bulletSpeed
-			if bullet[2] == 'downLeft':
-				bullet[0] -= self.bulletSpeed
-				bullet[1] += self.bulletSpeed
-			if bullet[2] == 'upRight':
-				bullet[0] += self.bulletSpeed
-				bullet[1] -= self.bulletSpeed
-			if bullet[2] == 'upLeft':
-				bullet[0] -= self.bulletSpeed
-				bullet[1] -= self.bulletSpeed
-
-			if bullet[0] > 650 or bullet[0] < 0:
-				self.bulletSet.remove(bullet)
-			elif bullet[1] > 650 or bullet[1] < 0:
-				self.bulletSet.remove(bullet)
-
-	def drawBullets(self,screen):
-		for bullet in self.bulletSet:
-			center = (int(bullet[0]),int(bullet[1]))
-			pygame.draw.circle(screen,(0,0,0),center,2)
-
-	def fire(self):
-		self.bulletSet.append([self.centerX,self.centerY,self.direction])
-

@@ -1,5 +1,7 @@
 import pygame,random
 
+#Player classs to draw and move the player and their bullets fired
+
 class Player(object):
 
 	def __init__(self,color):
@@ -50,11 +52,6 @@ class Player(object):
 		self.bulletUp = 'sprites/bulletUp.png'
 		self.bulletDown = 'sprites/bulletDown.png'
 
-
-
-
-		#self.weapon = weapon
-		# self.sprite = sprite #implement sprite selection for different characters
 
 	def move(self,dx,dy):
 		#moving player based on input
@@ -148,6 +145,7 @@ class Player(object):
 		self.score = 0
 
 	def moveBullets(self):
+		#moving all the bullets based on posisiton and direction
 		for bullet in self.bulletSet:
 			if bullet[2] == 'right':
 				bullet[0] += self.bulletSpeed
@@ -176,12 +174,14 @@ class Player(object):
 				self.bulletSet.remove(bullet)
 
 	def drawBullets(self,screen):
+		#drawing a circle as all the bullets
 		for bullet in self.bulletSet:
 			center = (int(bullet[0]),int(bullet[1]))
 			pygame.draw.circle(screen,(0,0,0),center,2)
 
 
 	def displayHealth(self,screen):
+		#drawing the health bar based on remaining health
 		healthbarPos = (30,30)
 		if self.health >= 0:
 			pygame.draw.rect(screen,(220,0,0),(healthbarPos,(20,150*self.health/100)))
@@ -189,6 +189,7 @@ class Player(object):
 
 
 	def draw(self,screen):
+		#drawing the player based on location and sprite
 		self.drawBullets(screen)
 		self.moveBullets()
 
@@ -201,9 +202,6 @@ class Player(object):
 		self.centerX = self.rect.centerx
 		self.centerY = self.rect.centery
 
-		
-		# pygame.draw.rect(screen,(0,0,0),
-		# 	(self.x,self.y,30,30))
 		screen.blit(sprite,self.rect)
 		
 		

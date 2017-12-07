@@ -1,6 +1,6 @@
-###
+
 #Server code from provided gitBook on 15-112 webiste
-###
+#Slightly modified to fit my needs
 
 
 import socket
