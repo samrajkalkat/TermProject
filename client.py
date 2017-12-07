@@ -2,6 +2,7 @@ import socket
 import threading 
 from queue import Queue
 import os
+import shelve
 
 HOST = ''
 PORT = 50003
@@ -11,6 +12,10 @@ PORT = 50003
 server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 server.connect((HOST,PORT))
 print('Connected!')
+
+d = shelve.open('score.dat')
+
+
 
 
 #server handling function from gitbook on 15-112 website
@@ -50,24 +55,44 @@ class PygameGame(object):
 		# image = pygame.image.load("titleScreen.jpg")
 		# image = pygame.transform.scale(image, (550, 550))
 		# screen.blit(image,(0,0))
-		self.drawText(screen,'Welcome!',(self.width/2,self.height/4),80,WHITE)
+		image = pygame.image.load("welcome.png")
+		image = pygame.transform.scale(image, (500, 100))
+		screen.blit(image,(30,100))
+		# self.drawText(screen,'Welcome!',(self.width/2,self.height/4),80,WHITE)
 		self.drawText(screen,"Press 'p' to start",(self.width/2,3*self.height/4),40,WHITE)
 
 	def drawMenuScreen(self,screen):
-		self.drawText(screen,'Select game mode',(self.width/2,self.height/4),50,WHITE)
+		image = pygame.image.load("menu.png")
+		image = pygame.transform.scale(image, (500, 100))
+		screen.blit(image,(30,100))
 
-		self.drawText(screen,'Single Player',(self.width/4,3*self.height/4),40,WHITE)
+		single = pygame.image.load("singlePlayer.png")
+		single = pygame.transform.scale(single, (200, 50))
+		screen.blit(single,(30,3*self.height/4-20))
+		# self.drawText(screen,'Single Player',(self.width/4,3*self.height/4),40,WHITE)
 		self.drawText(screen,"(press '1')",(self.width/4,3*self.height/4+50),40,WHITE)
 
-		self.drawText(screen,'Multi Player',(3*self.width/4,3*self.height/4),40,WHITE)
+		multi = pygame.image.load("multiPlayer.png")
+		multi = pygame.transform.scale(multi, (200, 50))
+		screen.blit(multi,(self.width-230,3*self.height/4-20))
 		self.drawText(screen,"(press '2')",(3*self.width/4,3*self.height/4+50),40,WHITE)
 
 	def drawGameOverScreen(self,screen):
 		screen.fill((0,0,0))
 		self.drawText(screen,'Game Over!',(self.width/2,self.height/4),40,WHITE)
-		self.drawText(screen,"Score: %s" % (self.player.score),(self.width/2,self.height/4 + 50),30,WHITE)
+		self.drawText(screen,"Score: %s" % (self.player.score),(self.width/2,self.height/4 + 50),30,RED)
+		self.drawText(screen,"High score: %s" % (d['Score']),(self.width/2,self.height/4 + 80),30,GREEN)
 		self.drawText(screen,"(press 'r' to respawn)",(self.width/2,self.height/2),40,WHITE)
 		self.drawText(screen,"(press 'm' to return to menu)",(self.width/2,self.height/2 + 50),40,WHITE)
+
+
+	def drawGameOverScreen2Player(self,screen):
+		screen.fill((0,0,0))
+		self.drawText(screen,'Game Over!',(self.width/2,self.height/4),40,WHITE)
+		self.drawText(screen,"Player1: %s" % (self.player.score),(self.width/2,self.height/4 + 50),30,RED)
+		self.drawText(screen,"Player2: %s" % (self.player2.score),(self.width/2,self.height/4 + 80),30,RED)
+		self.drawText(screen,"(press 'm' to return to menu)",(self.width/2,self.height/2 + 50),40,WHITE)
+
 
 	def drawPauseScreen(self,screen):
 		screen.fill((255,255,255))
@@ -86,10 +111,9 @@ class PygameGame(object):
 
 	def initMultiPlayerGame(self,screen):
 		image = pygame.image.load("terrain.png")
-		# screen.blit(image,(0,0))
-		screen.fill((225,225,225))
-		self.drawText(screen,"Score: %s" % (self.player.score),(self.width-55,30),30,BLACK)
-		self.drawText(screen,"Player2: %s" % (self.player2.score),(self.width-55,55),30,BLACK)
+		screen.blit(image,(0,0))
+		self.drawText(screen,"Score: %s" % (self.player.score),(self.width-60,30),30,BLACK)
+		self.drawText(screen,"Player2: %s" % (self.player2.score),(self.width-60,55),30,BLACK)
 
 	def drawText(self,screen,text,center,size,color):
 		#helper function to draw text on the screen
@@ -162,6 +186,7 @@ class PygameGame(object):
 				self.multiPlayer = True
 				msg = 'otherPlayerReady %s\n' % (self.myID)
 				self.server.send(msg.encode())
+
 				if self.myID == 'p2':
 					self.player = Player('red')
 					self.player2 = Player('blue')
@@ -233,6 +258,8 @@ class PygameGame(object):
 						self.generateWalls()
 					self.blood.clear()
 					self.paused = False
+					self.player2GameOver = False
+					self.gameOver = False
 
 				if keyCode == pygame.K_m:
 					msg = 'menu %s\n' % (self.paused)
@@ -245,6 +272,21 @@ class PygameGame(object):
 					self.blood.clear()
 					self.multiPlayer = False
 					self.menuScreen = True
+					self.paused = False
+
+			if self.bothDead:
+
+				if keyCode == pygame.K_m:
+					del self.enemyList[:]
+					del self.walls[:]
+					self.player.respawn()
+					self.player2.respawn()
+					self.blood.clear()
+					self.multiPlayer = False
+					self.menuScreen = True
+					self.bothDead = False
+					self.gameOver = False
+					self.player2GameOver = False
 					self.paused = False
 
 	def keyReleased(self, keyCode, modifier):
@@ -435,10 +477,11 @@ class PygameGame(object):
 					self.myID = msg[1]
 
 				if cmd == 'otherPlayerReady':
+					self.otherPlayerReady = True
 					if self.multiPlayer:
 						self.bothPlayersReady = True
-						if self.myID == 'p1':
-							self.generateWalls()
+			
+						self.generateWalls()
 
 				if self.multiPlayer:
 					if cmd == 'newEnemy':
@@ -463,6 +506,8 @@ class PygameGame(object):
 								self.generateWalls()
 							self.blood.clear()
 							self.paused = False
+							self.player2GameOver = False
+							self.gameOver = False
 
 					if cmd == 'menu':
 						if self.paused:
@@ -477,6 +522,9 @@ class PygameGame(object):
 
 					if cmd == 'myScore':
 						self.player2.score = int(msg[2])
+
+					if cmd == 'gameOver':
+						self.player2GameOver = True
 
 					if cmd == 'newWall':
 						print('received')
@@ -504,6 +552,14 @@ class PygameGame(object):
 					self.createEnemies()
 				if self.player.health <= 0:
 					self.gameOver = True
+
+					try:
+						if self.player.score > (d['Score']):
+							d['Score'] = self.player.score
+					except:
+						d['Score'] = self.player.score
+
+						
 					self.blood.clear()
 
 		if self.multiPlayer:
@@ -515,25 +571,48 @@ class PygameGame(object):
 						self.createEnemies()
 
 				self.moveEnemies()
+
+
+
+
+	
 				self.didBulletHitEnemy(self.enemy, self.player,self.player2)
 				self.didEnemyHitPlayer()
+
+				if self.player.health <= 0:
+					self.gameOver = True
+					msg = 'gameOver %s\n' % (self.myID)
+					self.server.send(msg.encode())
+
+			if self.gameOver and self.player2GameOver:
+				print('Over')
+				self.bothDead = True
+				
+
 
 		
 
 	def moveEnemies(self):
-		distance = lambda x1,y1,x2,y2: math.sqrt((x2-x1)**2 + (y2-y1)**2)
+
 
 		if self.singlePlayer:
 			for enemy in self.enemyList:
 				enemy.move(self.player,None,self.walls)
-				if self.enemy.name == 'boss':
-					print('asdhfklas')
-					if distance(enemy.x,enemy.y,self.player.x,self.player.y) <= 10:
-						print('fire')
+			
 
 		elif self.multiPlayer:
 			for enemy in self.enemyList:
-				enemy.move(self.player,self.player2,self.walls)
+
+				if self.gameOver:
+					enemy.move(self.player2,None,self.walls)
+
+				if not self.player2GameOver and self.gameOver == False:
+					enemy.move(self.player,self.player2,self.walls)
+
+				if self.player2GameOver and self.gameOver == False:
+					enemy.move(self.player,None,self.walls)
+
+				
 		
    
 	def createEnemies(self):
@@ -609,8 +688,20 @@ class PygameGame(object):
 			if not self.bothPlayersReady:
 				self.drawText(screen,'Waiting for Player 2...',(self.width/2,self.height/4),35,RED)
 
+			if self.gameOver:
+					self.drawText(screen,'You died!',(self.width/2,self.height/4),40,RED)
+
 			if self.paused:
 				self.drawPauseScreen(screen)
+
+			if self.bothDead:
+				self.drawGameOverScreen2Player(screen)
+				self.bothPlayersReady = False
+				self.otherPlayerReady = False
+
+
+
+
 
 	def isKeyPressed(self, key):
 		''' return whether a specific key is being held '''
@@ -630,7 +721,10 @@ class PygameGame(object):
 		self.multiPlayer = False
 		self.gameOver = False
 		self.bothPlayersReady = False
+		self.otherPlayerReady = False
 		self.paused = False
+		self.player2GameOver = False
+		self.bothDead = False
 
 		self.walls = []
 
@@ -692,11 +786,12 @@ class PygameGame(object):
 						dx = 3  
 
 					playerRect = pygame.Rect((self.player.x+dx,self.player.y+dy),(self.player.spriteWidth//2, self.player.spriteHeight//2))
-				
-					if playerRect.collidelist(self.walls) == -1:
-						self.player.move(dx,dy)
-						message = 'playerMoved %d %d\n' %(dx,dy)
-						self.server.send(message.encode())
+					
+					if not self.gameOver:
+						if playerRect.collidelist(self.walls) == -1:
+							self.player.move(dx,dy)
+							message = 'playerMoved %d %d\n' %(dx,dy)
+							self.server.send(message.encode())
 
 
 			for event in pygame.event.get():
@@ -723,6 +818,7 @@ class PygameGame(object):
 			pygame.display.flip()
 
 		pygame.quit()
+		d.close()
 
 def main():
 	game = PygameGame()
