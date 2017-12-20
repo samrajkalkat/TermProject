@@ -60,11 +60,11 @@ class PygameGame(object):
 
 	def drawStartScreen(self,screen):
 		screen.fill((50,50,50))
-		image = pygame.image.load("welcome.png")
+		image = pygame.image.load("sprites/welcome.png")
 		image = pygame.transform.scale(image, (500, 100))
 		screen.blit(image,(30,100))
 
-		zombie = pygame.image.load('zombie.png')
+		zombie = pygame.image.load('sprites/zombie.png')
 		zombie = pygame.transform.scale(zombie, (100, 100))
 		screen.blit(zombie,(self.width/2-50,250))
 
@@ -82,17 +82,17 @@ class PygameGame(object):
 
 
 	def drawMenuScreen(self,screen):
-		image = pygame.image.load("menu.png")
+		image = pygame.image.load("sprites/menu.png")
 		image = pygame.transform.scale(image, (500, 100))
 		screen.blit(image,(30,100))
 
-		single = pygame.image.load("singlePlayer.png")
+		single = pygame.image.load("sprites/singlePlayer.png")
 		single = pygame.transform.scale(single, (200, 50))
 		screen.blit(single,(30,3*self.height/4-20))
 		# self.drawText(screen,'Single Player',(self.width/4,3*self.height/4),40,WHITE)
 		self.drawText(screen,"(press '1')",(self.width/4,3*self.height/4+50),40,WHITE)
 
-		multi = pygame.image.load("multiPlayer.png")
+		multi = pygame.image.load("sprites/multiPlayer.png")
 		multi = pygame.transform.scale(multi, (200, 50))
 		screen.blit(multi,(self.width-230,3*self.height/4-20))
 		self.drawText(screen,"(press '2')",(3*self.width/4,3*self.height/4+50),40,WHITE)
@@ -121,14 +121,14 @@ class PygameGame(object):
 		self.drawText(screen,"(press 'm' to return to menu)",(self.width/2,self.height/2 + 50),40,WHITE)
 
 	def initSinglePlayerGame(self,screen):
-		image = pygame.image.load("terrain.png")
+		image = pygame.image.load("sprites/terrain.png")
 		image = pygame.transform.scale(image, (550, 550))
 		screen.blit(image,(0,0))
 		self.drawText(screen,"Score: %s" % (self.player.score),(self.width-55,30),30,BLACK)
 		
 
 	def initMultiPlayerGame(self,screen):
-		image = pygame.image.load("terrain.png")
+		image = pygame.image.load("sprites/terrain.png")
 		screen.blit(image,(0,0))
 		self.drawText(screen,"Score: %s" % (self.player.score),(self.width-60,30),30,BLACK)
 		self.drawText(screen,"Player2: %s" % (self.player2.score),(self.width-60,55),30,BLACK)
