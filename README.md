@@ -1,14 +1,13 @@
-\f0\fs26 \cf0 \expnd0\expndtw0\kerning0
-# Zombies Online\
-\
+# Zombies Online
+
 CMU 15-112 Term Project. Created with Pygame and Web Sockets.\
-\
-## Getting Started\
-\
+
+## Getting Started
+
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.\
-\
-## Prerequisites\
-\
+
+## Prerequisites
+
 Install pygame. Open the terminal and enter the following:\
 \
 ```\
